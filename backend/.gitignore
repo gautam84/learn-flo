@@ -45,4 +45,4 @@ Thumbs.db
 *.swp
 *.swo
 
-./src/generated/prisma 
+/src/generated
