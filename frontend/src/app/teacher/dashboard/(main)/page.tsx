@@ -1,7 +1,6 @@
 
 "use client";
 
-// import { SiteHeader } from "@/components/site-header"
 import {   
   Card,
   CardContent,
@@ -12,12 +11,29 @@ import {
  } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
-import { PlusCircle, Edit } from "lucide-react"
+import { PlusCircle, Edit, LogOut } from "lucide-react"
+import { useAuth } from "@/lib/contexts/auth-context";
 
 export default function Page() {
+  // const { user, logout } = useAuth();
+  // const router = useRouter();
+
+  // const handleLogout = () => {
+  //   logout();
+  //   router.push('/');
+  // };
+
   return (
     <main>
       <div className="flex flex-1 flex-col">
+        {/* <div className="flex items-center justify-between p-4 md:p-6"> */}
+          {/* <h1 className="text-xl font-bold">Welcome, {user?.name || 'Teacher'}</h1>
+          <Button variant="outline" size="sm" onClick={handleLogout}>
+            <LogOut className="h-4 w-4 mr-2" />
+            Logout
+          </Button>
+        </div> */}
+
         <div className="@container/main flex flex-1 flex-col gap-2">
           {/* Summary Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-4 md:gap-6 md:p-6">
@@ -43,6 +59,22 @@ export default function Page() {
               </CardHeader>
               <CardContent>
                 <p className="text-2xl font-bold">3</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Teacher Details */}
+          <div className="p-4 md:p-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Account Details</CardTitle>
+                <CardDescription>Your account information</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2">
+                  <li><span className="font-medium">Email:</span> n</li>
+                  <li><span className="font-medium">Account Type:</span> n</li>
+                </ul>
               </CardContent>
             </Card>
           </div>

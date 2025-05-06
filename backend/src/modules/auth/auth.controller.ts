@@ -27,60 +27,62 @@ export const registerSchema = z.object({
 
 export const login = async (req: Request, res: Response): Promise<any> => {
   try {
-    // Validate input using Zod
     if (!req.body || typeof req.body !== 'object') {
-      return res.status(400).json({
-        message: 'Request body is missing or invalid. Expected JSON object.',
-      });
+      return res.status(400).json({ success: false, error: 'Request body is missing or invalid.' });
     }
 
     const result = loginSchema.safeParse(req.body);
     if (!result.success) {
       return res.status(400).json({
-        message: 'Validation failed',
-        errors: result.error.errors.map(issue => issue.message),
+        success: false,
+        error: result.error.errors[0].message,
+        // data: result.error.errors.map(issue => issue.message),
       });
     }
 
     const { email, password } = result.data;
 
-    // Find user by email
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
-      return res.status(401).json({ message: 'User doesn\'t exist.' });
+      return res.status(401).json({ success: false, error: "User doesn't exist." });
     }
 
-    // Check password
     const isPasswordValid = await compare(password, user.password);
     if (!isPasswordValid) {
-      return res.status(401).json({ message: 'Invalid credentials.' });
+      return res.status(401).json({ success: false, error: 'Invalid credentials.' });
     }
 
-    // Generate JWT
-    const token = generateToken(user.id.toString());
-
+    const token = generateToken({
+      id: user.id.toString(),
+      username: user.username,
+      email: user.email,
+      role: user.role,
+    });
     res.cookie('token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // Secure cookie in production
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 360000000, // Cookie expires in 1 hour
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
     return res.status(200).json({
-      message: 'Login successful',
-      token,
-      user: {
-        id: user.id,
-        username: user.username, 
-        email: user.email,
-        role: user.role,
+      success: true,
+      data: {
+        token,
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          role: user.role,
+        },
       },
     });
   } catch (error) {
     console.error('Login error:', error);
-    return res.status(500).json({ message: 'Internal server error' });
+    return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 };
+
 
 
 export const register = async (req: Request, res: Response): Promise<any> => {
@@ -122,7 +124,12 @@ export const register = async (req: Request, res: Response): Promise<any> => {
     });
 
     // Generate JWT
-    const token = generateToken(newUser.id.toString());
+    const token = generateToken({
+      id: newUser.id.toString(),
+      username: newUser.username,
+      email: newUser.email,
+      role: newUser.role,
+    });
 
     res.cookie('token', token, {
       httpOnly: true,

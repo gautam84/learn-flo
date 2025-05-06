@@ -7,6 +7,8 @@ import { LandingSection } from "@/components/landing-section";
 import { useEffect, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { ForgotPasswordForm } from "@/components/forgot-password";
+import { useAuth } from "@/lib/contexts/auth-context"
+
 
 
 type FormType = "landing" | "studentLoginForm"| "teacherLoginForm" | "studentSignUpForm" | "teacherSignUpForm"| "forgotPassword"
@@ -27,8 +29,10 @@ function getFormFromHash(hash: string): FormType {
 }
 
 export default function LandingPage() {
-  const [currentForm, setCurrentForm] = useState<FormType>(
-'landing'  );
+  const [currentForm, setCurrentForm] = useState<FormType>('landing'  );
+
+  const { user } = useAuth();
+
 
 
 
@@ -59,9 +63,10 @@ export default function LandingPage() {
       case "studentLoginForm":
         return (
           <LoginForm
-            onSubmit={() => console.log("Student Login")}
-            onGoogleLogin={() => console.log("Google Login")}
+           onGoogleLogin={() => console.log("Google Login")}
             onForgotPassword={() => handleFormChange("forgotPassword")}
+            callbackUrl="/student/dashboard"
+
             onSignUp={() => handleFormChange("studentSignUpForm")}
             label="Email or Student ID"
           />
@@ -69,8 +74,9 @@ export default function LandingPage() {
       case "teacherLoginForm":
         return (
           <LoginForm
-            onSubmit={() => console.log("Teacher Login")}
             onGoogleLogin={() => console.log("Google Login")}
+            callbackUrl="/teacher/dashboard"
+
             onForgotPassword={() => handleFormChange("forgotPassword")}
             onSignUp={() => handleFormChange("teacherSignUpForm")}
             label="Email or Teacher ID"
@@ -93,7 +99,15 @@ export default function LandingPage() {
         );;
     }
   };
-  
+
+  if (user) {
+    // Redirect to the dashboard based on user role
+    if (user.role === "STUDENT") {
+      window.location.href = "/student/dashboard";
+    } else if (user.role === "TEACHER") {
+      window.location.href = "/teacher/dashboard";
+    }
+  }
 
   return (
     <div className="grid min-h-svh lg:grid-cols-2">

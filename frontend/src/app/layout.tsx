@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Cabin } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "@/lib/contexts/auth-context";
 
 const cabin = Cabin({
   subsets: ['latin'],
@@ -24,7 +25,9 @@ export default function RootLayout({
       <body
         className={`${cabin.variable}  antialiased`}
       >
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );
