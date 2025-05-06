@@ -9,24 +9,105 @@ generator client {
   output   = "../src/generated/prisma"
 }
 
-
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id       Int     @id @default(autoincrement())
-  email    String  @unique
-  password String  
-  role     Role
-  username String  @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
 enum Role {
   TEACHER
   STUDENT
+}
+
+enum TestType {
+  WRITTEN
+  MCQ
+}
+
+model User {
+  id                   Int         @id @default(autoincrement())
+  email                String      @unique
+  password             String
+  role                 Role
+  username             String      @unique
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+
+  classroomsCreated    Classroom[] @relation("CreatedClassrooms")
+  enrolledClassrooms   Classroom[] @relation("EnrolledStudents")
+  userChat             Chat[]      @relation("UserChat")
+  createdTests         Test[]      @relation("CreatedTests")
+}
+
+model Classroom {
+  id                   Int           @id @default(autoincrement())
+  name                 String
+  createdAt            DateTime      @default(now())
+
+  creatorId            Int
+  creator              User          @relation("CreatedClassrooms", fields: [creatorId], references: [id])
+
+  enrolledStudents     User[]        @relation("EnrolledStudents")
+  createdAnnouncements Announcement[] @relation("ClassroomAnnouncements")
+  createdChat          Chat[]        @relation("CreatedChat")
+}
+
+model Announcement {
+  id           Int       @id @default(autoincrement())
+  classroomId  Int
+  classroom    Classroom @relation("ClassroomAnnouncements", fields: [classroomId], references: [id])
+
+  title        String
+  body         String?
+  fileUrl      String?
+  fileType     String?
+  createdAt    DateTime   @default(now())
+}
+
+model Chat {
+  id           String     @id @default(uuid())
+
+  classroomId  Int
+  classroom    Classroom  @relation("CreatedChat", fields: [classroomId], references: [id])
+
+  userId       Int
+  user         User       @relation("UserChat", fields: [userId], references: [id])
+
+  createdAt    DateTime   @default(now())
+}
+
+model Test {
+  id           Int       @id @default(autoincrement())
+  title        String
+  description  String?
+  type         TestType
+
+  creatorId    Int
+  creator      User      @relation("CreatedTests", fields: [creatorId], references: [id])
+
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  questions    Question[]
+}
+
+model Question {
+  id        Int       @id @default(autoincrement())
+  text      String
+
+  testId    Int
+  test      Test      @relation(fields: [testId], references: [id])
+
+  options   Option[]
+  answer    String?
+  isCorrect Boolean   @default(false)
+  isMcq     Boolean   @default(false)
+}
+
+model Option {
+  id          Int      @id @default(autoincrement())
+  text        String
+
+  questionId  Int
+  question    Question @relation(fields: [questionId], references: [id])
 }
