@@ -1,33 +1,169 @@
 import { Request, Response } from 'express';
 import { hashPassword, comparePasswords, generateToken } from './auth.utils';
+import { prisma } from '../../lib/prisma';
+import { compare } from 'bcryptjs';
+import { z } from 'zod';
 
-const fakeUserDB: { [email: string]: { id: string; email: string; passwordHash: string } } = {};
+
+export const loginSchema = z.object({
+  email: z.string({ required_error: "Email is required." })
+          .email("Please enter a valid email address."),
+  password: z.string({ required_error: "Password is required." }),
+});
+
+export const registerSchema = z.object({
+  username: z.string({ required_error: "Username is required." })
+             .min(3, "Username must be at least 3 characters long.")
+             .max(20, "Username must be at most 20 characters long.")
+             .regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores."),
+  email: z.string({ required_error: "Email is required." })
+          .email("Please enter a valid email address."),
+  password: z.string({ required_error: "Password is required." })
+            .min(6, "Password must be at least 6 characters long."),
+  role: z.enum(['STUDENT', 'TEACHER'], {
+    errorMap: () => ({ message: "Role must be either STUDENT or TEACHER." }),
+  }),
+});
+
+export const login = async (req: Request, res: Response): Promise<any> => {
+  try {
+    // Validate input using Zod
+    if (!req.body || typeof req.body !== 'object') {
+      return res.status(400).json({
+        message: 'Request body is missing or invalid. Expected JSON object.',
+      });
+    }
+
+    const result = loginSchema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({
+        message: 'Validation failed',
+        errors: result.error.errors.map(issue => issue.message),
+      });
+    }
+
+    const { email, password } = result.data;
+
+    // Find user by email
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      return res.status(401).json({ message: 'User doesn\'t exist.' });
+    }
+
+    // Check password
+    const isPasswordValid = await compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: 'Invalid credentials.' });
+    }
+
+    // Generate JWT
+    const token = generateToken(user.id.toString());
+
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production', // Secure cookie in production
+      sameSite: 'strict',
+      maxAge: 360000000, // Cookie expires in 1 hour
+    });
+
+    return res.status(200).json({
+      message: 'Login successful',
+      token,
+      user: {
+        id: user.id,
+        username: user.username, 
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
 
 
-export const register = async (req: Request, res: Response) : Promise<any> =>{
-  const { email, password } = req.body;
-  if (fakeUserDB[email]) {
-    return res.status(400).json({ message: 'User already exists' });
+export const register = async (req: Request, res: Response): Promise<any> => {
+  try {
+    // Validate input using Zod
+
+    if (!req.body || typeof req.body !== 'object') {
+      return res.status(400).json({
+        message: 'Request body is missing or invalid. Expected JSON object.',
+      });
+    }
+    const result = registerSchema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({
+        message: 'Validation failed',
+        errors: result.error.errors.map(issue => issue.message),
+      });
+    }
+
+    const { username, email, password, role } = result.data;
+
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser) {
+      return res.status(409).json({ message: 'User already exists.' });
+    }
+
+    // Hash password
+    const hashedPassword = await hashPassword(password);
+
+    // Create new user
+    const newUser = await prisma.user.create({
+      data: {
+        username,
+        email,
+        password: hashedPassword,
+        role,
+      },
+    });
+
+    // Generate JWT
+    const token = generateToken(newUser.id.toString());
+
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production', // Secure cookie in production
+      sameSite: 'strict',
+      maxAge: 360000000, // Cookie expires in 1 hour
+    });
+
+    return res.status(201).json({
+      message: 'User registered successfully.',
+      token,
+      user: {
+        id: newUser.id,
+        username: newUser.username,
+        email: newUser.email,
+        role: newUser.role,
+      },
+    });
+  } catch (error) {
+    console.error('Registration error:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const logout = (req: Request, res: Response): any  => {
+  const token = req.cookies.token;
+  if (!token) {
+    return res.status(400).json({ message: 'No active session found.' });
   }
 
-  const passwordHash = await hashPassword(password);
-  const id = Date.now().toString();
-  fakeUserDB[email] = { id, email, passwordHash };
 
-  const token = generateToken(id);
-  return res.status(201).json({ token });
+  try {
+    res.clearCookie('token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production', // Secure cookie in production
+      sameSite: 'strict',
+    });
+
+    return res.status(200).json({ message: 'Logout successful' });
+  } catch (error) {
+    console.error('Logout error:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
 };
-
-export const login = async (req: Request, res: Response): Promise<any>  => {
-  const { email, password } = req.body;
-  const user = fakeUserDB[email];
-  if (!user) return res.status(401).json({ message: 'Invalid credentials' });
-
-  const isMatch = await comparePasswords(password, user.passwordHash);
-  if (!isMatch) return res.status(401).json({ message: 'Invalid credentials' });
-
-  const token = generateToken(user.id);
-  return res.status(200).json({ token });
-};
-
-
