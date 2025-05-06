@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import { PlusCircle, Edit, LogOut } from "lucide-react"
 import { useAuth } from "@/lib/contexts/auth-context";
+import { SiteHeader } from "@/components/site-header";
 
 export default function Page() {
   // const { user, logout } = useAuth();
@@ -33,6 +34,7 @@ export default function Page() {
             Logout
           </Button>
         </div> */}
+        <SiteHeader/>
 
         <div className="@container/main flex flex-1 flex-col gap-2">
           {/* Summary Cards */}

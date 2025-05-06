@@ -45,17 +45,17 @@ const data = {
   navMain: [
     {
       title: "Dashboard",
-      url: "/dashboard",
+      url: "/teacher/dashboard",
       icon: IconDashboard,
     },
     {
       title: "Classrooms",
-      url: "/dashboard/revision",
+      url: "/teacher/dashboard/classrooms",
       icon: IconSchool,
     },
     {
       title: "Tests",
-      url: "/dashboard/quiz",
+      url: "/teacher/dashboard/quiz",
       icon: IconNotes,
     },
    

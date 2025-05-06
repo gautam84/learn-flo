@@ -46,4 +46,4 @@ Thumbs.db
 *.swo
 
 /src/generated
-/prisma/migrations
+/prisma/migrations/

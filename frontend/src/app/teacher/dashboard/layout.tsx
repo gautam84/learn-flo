@@ -26,9 +26,10 @@ export default function DashboardLayout({ children }: Readonly<{
       >
         <AppSidebar variant="inset" />
         <SidebarInset>
+          
           {children}
         </SidebarInset>
       </SidebarProvider>
-   // {/* </AuthGuard> */}
+//  {/* </AuthGuard> */}
   )
 }
