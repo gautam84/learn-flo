@@ -1,64 +1,94 @@
-// 'use client';
 
-// import { useAuth } from "@/lib/contexts/auth-context";
-// import { Button } from "@/components/ui/button";
-// import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+"use client";
 
-// export default function StudentDashboardPage() {
-//   // const { user, logout } = useAuth();
+import {   
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+ } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { useRouter } from "next/navigation"
+import { PlusCircle, Edit, LogOut } from "lucide-react"
+import { useAuth } from "@/lib/contexts/auth-context";
+import { SiteHeader } from "@/components/site-header";
 
-//   return (
-//     <div className="flex flex-col gap-8 p-6">
-//       <div className="flex items-center justify-between">
-//         <h1 className="text-3xl font-bold">Student Dashboard</h1>
-//         <Button variant="outline" onClick={logout}>Logout</Button>
-//       </div>
+export default function Page() {
+  // const { user, logout } = useAuth();
+  // const router = useRouter();
 
-//       <Card>
-//         <CardHeader>
-//           <CardTitle>Welcome back, {user?.name || 'Student'}</CardTitle>
-//           <CardDescription>This is your student dashboard</CardDescription>
-//         </CardHeader>
-//         <CardContent>
-//           <p>Your account details:</p>
-//           <ul className="list-disc pl-5 mt-2">
-//             <li>Email: {user?.email}</li>
-//             <li>Account type: {user?.userType}</li>
-//           </ul>
-//         </CardContent>
-//       </Card>
+  // const handleLogout = () => {
+  //   logout();
+  //   router.push('/');
+  // };
 
-//       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-//         <Card>
-//           <CardHeader>
-//             <CardTitle>My Courses</CardTitle>
-//             <CardDescription>Courses you are enrolled in</CardDescription>
-//           </CardHeader>
-//           <CardContent>
-//             <p className="text-muted-foreground">No courses found.</p>
-//           </CardContent>
-//         </Card>
+  return (
+    <main>
+      <div className="flex flex-1 flex-col">
+        {/* <div className="flex items-center justify-between p-4 md:p-6"> */}
+          {/* <h1 className="text-xl font-bold">Welcome, {user?.name || 'Teacher'}</h1>
+          <Button variant="outline" size="sm" onClick={handleLogout}>
+            <LogOut className="h-4 w-4 mr-2" />
+            Logout
+          </Button>
+        </div> */}
+        <SiteHeader/>
 
-//         <Card>
-//           <CardHeader>
-//             <CardTitle>Upcoming Assignments</CardTitle>
-//             <CardDescription>Your pending assignments</CardDescription>
-//           </CardHeader>
-//           <CardContent>
-//             <p className="text-muted-foreground">No upcoming assignments.</p>
-//           </CardContent>
-//         </Card>
+        <div className="@container/main flex flex-1 flex-col gap-2">
+          {/* Summary Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-4 md:gap-6 md:p-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm text-muted-foreground">Total Students</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-bold">120</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm text-muted-foreground">Total Classrooms</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-bold">8</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm text-muted-foreground">Active Tests</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-bold">3</p>
+              </CardContent>
+            </Card>
+          </div>
 
-//         <Card>
-//           <CardHeader>
-//             <CardTitle>Recent Grades</CardTitle>
-//             <CardDescription>Your latest results</CardDescription>
-//           </CardHeader>
-//           <CardContent>
-//             <p className="text-muted-foreground">No recent grades.</p>
-//           </CardContent>
-//         </Card>
-//       </div>
-//     </div>
-//   );
-// }
+   
+
+          {/* Recent Classrooms */}
+          <div className="p-4 md:p-6">
+            <h2 className="text-lg font-semibold mb-4">Recent Classrooms</h2>
+            <div className="grid grid-cols-1 gap-4">
+              {[
+                { name: "Math - Grade 10", updated: "2 hours ago" },
+                { name: "Science - Grade 9", updated: "yesterday" },
+                { name: "History - Grade 8", updated: "3 days ago" },
+              ].map((classroom, idx) => (
+                <Card key={idx}>
+                  <CardHeader>
+                    <CardTitle className="text-base">{classroom.name}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground">Updated {classroom.updated}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+}

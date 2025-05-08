@@ -3,6 +3,8 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { STORAGE_KEYS } from '@/lib/api/config';
 import { User } from '../common/types';
+import  {authService}  from "@/lib/api/auth"
+
 
 
 
@@ -49,12 +51,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token);
     localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(userData));
     setUser(userData);
+
   };
 
   const logout = () => {
-    localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
-    localStorage.removeItem(STORAGE_KEYS.USER);
+    // localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+    // localStorage.removeItem(STORAGE_KEYS.USER);
     setUser(null);
+     authService.logout()
+    window.location.href = "/"; // Optional redirect
+
+
   };
 
   const getDashboardUrl = () => {

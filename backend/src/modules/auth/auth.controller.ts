@@ -87,33 +87,33 @@ export const login = async (req: Request, res: Response): Promise<any> => {
 
 export const register = async (req: Request, res: Response): Promise<any> => {
   try {
-    // Validate input using Zod
-
     if (!req.body || typeof req.body !== 'object') {
       return res.status(400).json({
-        message: 'Request body is missing or invalid. Expected JSON object.',
+        success: false,
+        error: 'Request body is missing or invalid.',
       });
     }
+
     const result = registerSchema.safeParse(req.body);
     if (!result.success) {
       return res.status(400).json({
-        message: 'Validation failed',
-        errors: result.error.errors.map(issue => issue.message),
+        success: false,
+        error: result.error.errors[0].message,
       });
     }
 
     const { username, email, password, role } = result.data;
 
-    // Check if user already exists
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
-      return res.status(409).json({ message: 'User already exists.' });
+      return res.status(409).json({
+        success: false,
+        error: 'User already exists.',
+      });
     }
 
-    // Hash password
     const hashedPassword = await hashPassword(password);
 
-    // Create new user
     const newUser = await prisma.user.create({
       data: {
         username,
@@ -123,7 +123,6 @@ export const register = async (req: Request, res: Response): Promise<any> => {
       },
     });
 
-    // Generate JWT
     const token = generateToken({
       id: newUser.id.toString(),
       username: newUser.username,
@@ -133,26 +132,32 @@ export const register = async (req: Request, res: Response): Promise<any> => {
 
     res.cookie('token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // Secure cookie in production
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 360000000, // Cookie expires in 1 hour
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
     return res.status(201).json({
-      message: 'User registered successfully.',
-      token,
-      user: {
-        id: newUser.id,
-        username: newUser.username,
-        email: newUser.email,
-        role: newUser.role,
+      success: true,
+      data: {
+        token,
+        user: {
+          id: newUser.id,
+          username: newUser.username,
+          email: newUser.email,
+          role: newUser.role,
+        },
       },
     });
   } catch (error) {
     console.error('Registration error:', error);
-    return res.status(500).json({ message: 'Internal server error' });
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+    });
   }
 };
+
 
 export const logout = (req: Request, res: Response): any  => {
   const token = req.cookies.token;

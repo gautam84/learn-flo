@@ -25,89 +25,123 @@ enum TestType {
 }
 
 model User {
-  id                   Int         @id @default(autoincrement())
-  email                String      @unique
-  password             String
-  role                 Role
-  username             String      @unique
-  createdAt            DateTime    @default(now())
-  updatedAt            DateTime    @updatedAt
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  role      Role
+  username  String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  classroomsCreated    Classroom[] @relation("CreatedClassrooms")
-  enrolledClassrooms   Classroom[] @relation("EnrolledStudents")
-  userChat             Chat[]      @relation("UserChat")
-  createdTests         Test[]      @relation("CreatedTests")
+  classroomsCreated  Classroom[]  @relation("CreatedClassrooms")
+  enrolledClassrooms Classroom[]  @relation("EnrolledStudents")
+  userChat           Chat[]       @relation("UserChat")
+  createdTests       Test[]       @relation("CreatedTests")
+  submissions        Submission[] @relation("SubmittedTests")
 }
 
 model Classroom {
-  id                   Int           @id @default(autoincrement())
-  name                 String
-  createdAt            DateTime      @default(now())
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now())
 
-  creatorId            Int
-  creator              User          @relation("CreatedClassrooms", fields: [creatorId], references: [id])
+  creatorId Int
+  creator   User @relation("CreatedClassrooms", fields: [creatorId], references: [id])
 
-  enrolledStudents     User[]        @relation("EnrolledStudents")
+  enrolledStudents     User[]         @relation("EnrolledStudents")
   createdAnnouncements Announcement[] @relation("ClassroomAnnouncements")
-  createdChat          Chat[]        @relation("CreatedChat")
+  createdChat          Chat[]         @relation("CreatedChat")
 }
 
 model Announcement {
-  id           Int       @id @default(autoincrement())
-  classroomId  Int
-  classroom    Classroom @relation("ClassroomAnnouncements", fields: [classroomId], references: [id])
+  id          Int       @id @default(autoincrement())
+  classroomId Int
+  classroom   Classroom @relation("ClassroomAnnouncements", fields: [classroomId], references: [id])
 
-  title        String
-  body         String?
-  fileUrl      String?
-  fileType     String?
-  createdAt    DateTime   @default(now())
+  title     String
+  body      String?
+  fileUrl   String?
+  fileType  String?
+  createdAt DateTime @default(now())
 }
 
 model Chat {
-  id           String     @id @default(uuid())
+  id String @id @default(uuid())
 
-  classroomId  Int
-  classroom    Classroom  @relation("CreatedChat", fields: [classroomId], references: [id])
+  classroomId Int
+  classroom   Classroom @relation("CreatedChat", fields: [classroomId], references: [id])
 
-  userId       Int
-  user         User       @relation("UserChat", fields: [userId], references: [id])
+  userId Int
+  user   User @relation("UserChat", fields: [userId], references: [id])
 
-  createdAt    DateTime   @default(now())
+  createdAt DateTime @default(now())
 }
 
 model Test {
-  id           Int       @id @default(autoincrement())
-  title        String
-  description  String?
-  type         TestType
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  type        TestType
 
-  creatorId    Int
-  creator      User      @relation("CreatedTests", fields: [creatorId], references: [id])
+  creatorId Int
+  creator   User @relation("CreatedTests", fields: [creatorId], references: [id])
 
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  duration Int // Duration in minutes
 
-  questions    Question[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  questions   Question[]
+  submissions Submission[] @relation("TestSubmission")
+}
+
+model Submission {
+  id Int @id @default(autoincrement())
+
+  studentId Int
+  student   User @relation("SubmittedTests", fields: [studentId], references: [id])
+
+  testId Int
+  test   Test @relation("TestSubmission", fields: [testId], references: [id])
+
+  submittedAt DateTime @default(now())
+  score       Int?
+
+  answers Answer[] @relation("SubmittedAnswers")
 }
 
 model Question {
-  id        Int       @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   text      String
-
   testId    Int
-  test      Test      @relation(fields: [testId], references: [id])
-
+  test      Test     @relation(fields: [testId], references: [id])
   options   Option[]
   answer    String?
-  isCorrect Boolean   @default(false)
-  isMcq     Boolean   @default(false)
+  isCorrect Boolean  @default(false)
+  isMcq     Boolean  @default(false)
+
+  answers Answer[] @relation("QuestionAnswers")
 }
 
 model Option {
-  id          Int      @id @default(autoincrement())
-  text        String
+  id         Int      @id @default(autoincrement())
+  text       String
+  questionId Int
+  question   Question @relation(fields: [questionId], references: [id])
 
-  questionId  Int
-  question    Question @relation(fields: [questionId], references: [id])
+  selectedInAnswers Answer[] @relation("SelectedOptionAnswers")
+}
+
+model Answer {
+  id           Int        @id @default(autoincrement())
+  submissionId Int
+  submission   Submission @relation("SubmittedAnswers", fields: [submissionId], references: [id])
+
+  questionId Int
+  question   Question @relation("QuestionAnswers", fields: [questionId], references: [id])
+
+  selectedOptionId Int?
+  selectedOption   Option? @relation("SelectedOptionAnswers", fields: [selectedOptionId], references: [id])
+
+  writtenAnswer String?
 }

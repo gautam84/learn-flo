@@ -30,6 +30,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import Link from 'next/link';
+import { useAuth } from "@/lib/contexts/auth-context"
+
 
 export function NavMain({
   items,
@@ -40,10 +42,17 @@ export function NavMain({
     icon?: Icon
   }[]
 }) {
+
+  const { user } = useAuth();
+
+  
+
   return (
     <SidebarGroup>
       <SidebarGroupContent className="flex flex-col gap-2">
-        <SidebarMenu>
+
+
+      {(user?.role == "TEACHER" )&& <SidebarMenu>
           <SidebarMenuItem className="flex items-center gap-2">
 
           <AlertDialog>
@@ -99,6 +108,9 @@ export function NavMain({
 
           </SidebarMenuItem>
         </SidebarMenu>
+
+}
+
         <SidebarMenu>
           {items.map((item) => (
             <Link

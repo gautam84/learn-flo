@@ -5,7 +5,6 @@ import { Label } from "@/components/ui/label"
 import { redirect } from "next/navigation"
 import { useActionState, useState } from "react"
 import  {authService}  from "@/lib/api/auth"
-import { useAuth } from "@/lib/contexts/auth-context"
 
 interface LoginFormProps extends React.ComponentProps<"form"> {
   onGoogleLogin: () => void
@@ -27,7 +26,7 @@ export function LoginForm({
 
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-    const { login } = useAuth();
+    // const { login } = useAuth();
   
 
   const handleSubmit = async (_: any, __: FormData) : Promise<string | undefined> => {

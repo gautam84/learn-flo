@@ -3,6 +3,8 @@ import { prisma } from '../../lib/prisma';
 import { AuthenticatedRequest } from '../../middleware/auth.middleware';
 import { z } from 'zod';
 
+
+
 export const getClassrooms = async (req: AuthenticatedRequest, res: Response): Promise<any> => {
   try {
     if (!req.user || !req.user.id) {
@@ -20,17 +22,37 @@ export const getClassrooms = async (req: AuthenticatedRequest, res: Response): P
       return res.status(404).json({ success: false, message: 'User not found.' });
     }
 
+    const page = parseInt(req.query.page as string, 10) || 1; // Default page 1
+    const pageSize = parseInt(req.query.pageSize as string, 10) || 10; // Default page size 10
+
     let classrooms;
 
     if (user.role === 'TEACHER') {
       // Teacher: get classrooms they created
-      classrooms = await prisma.classroom.findMany({
-        where: { creatorId: userId },
-        select: {
-          id: true,
-          name: true,
-          createdAt: true,
-        },
+      const [classroomsData, totalCount] = await prisma.$transaction([
+        prisma.classroom.findMany({
+          where: { creatorId: userId },
+          select: {
+            id: true,
+            name: true,
+            createdAt: true,
+          },
+          skip: (page - 1) * pageSize,
+          take: pageSize,
+        }),
+        prisma.classroom.count({
+          where: { creatorId: userId },
+        }),
+      ]);
+      classrooms = classroomsData;
+
+      return res.status(200).json({
+        success: true,
+        data: classrooms,
+        totalCount,
+        page,
+        pageSize,
+        totalPages: Math.ceil(totalCount / pageSize),
       });
     } else if (user.role === 'STUDENT') {
       // Student: get classrooms they're enrolled in
@@ -43,20 +65,26 @@ export const getClassrooms = async (req: AuthenticatedRequest, res: Response): P
               name: true,
               createdAt: true,
             },
+            skip: (page - 1) * pageSize,
+            take: pageSize,
           },
         },
       });
 
+      const totalCount = student?.enrolledClassrooms?.length ?? 0;
       classrooms = student?.enrolledClassrooms ?? [];
+
+      return res.status(200).json({
+        success: true,
+        data: classrooms,
+        totalCount,
+        page,
+        pageSize,
+        totalPages: Math.ceil(totalCount / pageSize),
+      });
     } else {
       return res.status(403).json({ success: false, message: 'Invalid user role.' });
     }
-
-    return res.status(200).json({
-      success: true,
-      data: classrooms,
-    });
-
   } catch (error) {
     console.error('Get Classrooms error:', error);
     return res.status(500).json({ success: false, message: 'Internal server error' });
@@ -170,19 +198,22 @@ const createClassroomSchema = z.object({
   
   export const getEnrolledStudents = async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     try {
-      const result = getStudentsSchema.safeParse(req.body);
+      // Validate the classroomId from the URL parameter
+      const result = getStudentsSchema.safeParse(req.params);  // Use `req.params` for route parameters
       if (!result.success) {
         return res.status(400).json({ success: false, error: result.error.errors[0].message });
       }
   
-      const { classroomId } = result.data;
+      const { classroomId } = result.data;  // Get classroomId from params
   
+      // Ensure user is authenticated
       if (!req.user || !req.user.id) {
         return res.status(401).json({ success: false, message: 'Unauthorized' });
       }
   
       const userId = parseInt(req.user.id, 10);
   
+      // Check if the user exists and is a teacher
       const user = await prisma.user.findUnique({ where: { id: userId } });
       if (!user || user.role !== 'TEACHER') {
         return res.status(403).json({ success: false, message: 'Only teachers can access student lists.' });
@@ -205,36 +236,54 @@ const createClassroomSchema = z.object({
         return res.status(403).json({ success: false, message: 'You are not authorized to view this classroom.' });
       }
   
-      // Fetch enrolled students
-      const students = await prisma.classroom.findUnique({
+      // Get pagination parameters (default to page 1 and page size 10)
+      const page = parseInt(req.query.page as string) || 1;
+      const pageSize = parseInt(req.query.pageSize as string) || 10;
+      const skip = (page - 1) * pageSize;
+  
+      // Fetch the enrolled students with pagination
+      const classroomWithStudents = await prisma.classroom.findUnique({
         where: { id: classroomId },
-        select: {
+        include: {
           enrolledStudents: {
-            where: { role: 'STUDENT' },
             select: {
               id: true,
               username: true,
               email: true,
             },
+            skip,  // Skip students based on pagination
+            take: pageSize,  // Limit the number of students per page
           },
         },
       });
   
+  
+
+     
+  
+      // Count the total number of enrolled students (without pagination)
+      const totalStudents = classroomWithStudents?.enrolledStudents.length || 0;
+  
+      // Pagination response
+      const totalPages = Math.ceil(totalStudents / pageSize);
+  
       return res.status(200).json({
         success: true,
-        students: students?.enrolledStudents || [],
+        students: classroomWithStudents?.enrolledStudents || [],
+        pagination: {
+          currentPage: page,
+          totalPages,
+          totalStudents,
+          pageSize,
+        },
       });
-  
     } catch (error) {
       console.error('Get students error:', error);
       return res.status(500).json({ success: false, message: 'Internal server error' });
     }
   };
 
-  const deleteClassroomSchema = z.object({
-    classroomId: z.number({ required_error: 'Classroom ID is required' }),
-  });
-  
+
   export const deleteClassroom = async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     try {
         const classroomId = parseInt(req.params.id, 10);

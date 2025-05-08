@@ -33,6 +33,22 @@ export class AuthService {
     return response;
   }
 
+  public async register(data: SignUpRequest): Promise<ApiResponse<SignUpResponse>> {
+
+    const response = await apiClient.post<SignUpResponse>(
+      ENDPOINTS.AUTH.REGISTER, 
+      data,
+      false
+    );
+
+    if (response.success && response.data) {
+      this.setAuthData(response.data);
+    }
+
+    return response;
+
+  }
+
   /**
    * Login with Google
    */
@@ -53,19 +69,7 @@ export class AuthService {
   /**
    * Sign up a new user
    */
-  public async signUp(data: SignUpRequest): Promise<ApiResponse<SignUpResponse>> {
-    const response = await apiClient.post<SignUpResponse>(
-      ENDPOINTS.AUTH.SIGNUP, 
-      data,
-      false
-    );
 
-    if (response.success && response.data) {
-      this.setAuthData(response.data);
-    }
-
-    return response;
-  }
 
   /**
    * Request password reset
@@ -81,13 +85,31 @@ export class AuthService {
   /**
    * Logout the current user
    */
-  public logout(): void {
+  public async logout(): Promise<ApiResponse<void> | undefined> {
     if (typeof window === 'undefined') return;
+  
+    // Clear local storage
     localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
     localStorage.removeItem(STORAGE_KEYS.USER);
-    // Optionally redirect to login page
-  }
+  
+    // Call logout endpoint if needed
+    try {
+      const response = await apiClient.post<void>(
+        ENDPOINTS.AUTH.LOGOUT,
+        {}, // body
+        false
+      );
 
+      
+  
+      return response;
+    } catch (error) {
+      console.error("Logout failed:", error);
+      return undefined;
+    }
+  
+    // Optionally: you could redirect user here if needed
+  }
   /**
    * Check if user is authenticated
    */

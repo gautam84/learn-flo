@@ -5,6 +5,7 @@ export interface ApiResponse<T> {
   success: boolean;
   data?: T;
   error?: string;
+  message?: string;
 }
 
 // Authentication Types
@@ -30,17 +31,11 @@ export interface ForgotPasswordRequest {
 export interface SignUpRequest {
   email: string;
   password: string;
-  name: string;
-  id: string; // Student ID or Teacher ID
-  userType: 'student' | 'teacher';
+  username: string;
+  role: 'STUDENT' | 'TEACHER';
 }
 
 export interface SignUpResponse {
   token: string;
-  user: {
-    id: string;
-    email: string;
-    name: string;
-    userType: 'STUDENT' | 'TEACHER';
-  };
+  user: User;
 }

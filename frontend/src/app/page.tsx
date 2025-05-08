@@ -84,10 +84,15 @@ export default function LandingPage() {
         );
       case "studentSignUpForm":
         return <SignUpForm
-        label="Student ID" />;
+        label="Student ID"
+        role="STUDENT"
+        callbackUrl="/student/dashboard"
+         />;
       case "teacherSignUpForm":
         return <SignUpForm 
-        label="Teacher ID"/>;
+        label="Teacher ID"
+        role="TEACHER"
+        callbackUrl="/teacher/dashboard"/>;
       case "forgotPassword":
         return <ForgotPasswordForm />;
       default:

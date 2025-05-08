@@ -16,24 +16,12 @@ import { useAuth } from "@/lib/contexts/auth-context";
 import { SiteHeader } from "@/components/site-header";
 
 export default function Page() {
-  // const { user, logout } = useAuth();
-  // const router = useRouter();
 
-  // const handleLogout = () => {
-  //   logout();
-  //   router.push('/');
-  // };
 
   return (
     <main>
       <div className="flex flex-1 flex-col">
-        {/* <div className="flex items-center justify-between p-4 md:p-6"> */}
-          {/* <h1 className="text-xl font-bold">Welcome, {user?.name || 'Teacher'}</h1>
-          <Button variant="outline" size="sm" onClick={handleLogout}>
-            <LogOut className="h-4 w-4 mr-2" />
-            Logout
-          </Button>
-        </div> */}
+
         <SiteHeader/>
 
         <div className="@container/main flex flex-1 flex-col gap-2">
@@ -66,20 +54,7 @@ export default function Page() {
           </div>
 
           {/* Teacher Details */}
-          <div className="p-4 md:p-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Account Details</CardTitle>
-                <CardDescription>Your account information</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  <li><span className="font-medium">Email:</span> n</li>
-                  <li><span className="font-medium">Account Type:</span> n</li>
-                </ul>
-              </CardContent>
-            </Card>
-          </div>
+
 
           {/* Recent Classrooms */}
           <div className="p-4 md:p-6">

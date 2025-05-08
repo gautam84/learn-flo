@@ -37,17 +37,42 @@ export default function Page() {
         <SiteHeader/>
 
         <div className="@container/main flex flex-1 flex-col gap-2">
-    
+          {/* Summary Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-4 md:gap-6 md:p-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm text-muted-foreground">Pass Percentage</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-bold">80%</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm text-muted-foreground">Total Appearing Students</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-bold">8</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm text-muted-foreground">Active Tests</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-bold">3</p>
+              </CardContent>
+            </Card>
+          </div>
 
-
-          {/* Recent Classrooms */}
+          {/* Teacher Details */}
           <div className="p-4 md:p-6">
-            <h2 className="text-lg font-semibold mb-4">All Classrooms</h2>
+            <h2 className="text-lg font-semibold mb-4">All Tests</h2>
             <div className="grid grid-cols-1 gap-4">
               {[
-                { name: "Math - Grade 10", updated: "2 hours ago" },
-                { name: "Science - Grade 9", updated: "yesterday" },
-                { name: "History - Grade 8", updated: "3 days ago" },
+                { name: "Histoy Test", updated: "2 hours ago" },
+                { name: "Science Test", updated: "yesterday" },
+                { name: "Math Test", updated: "3 days ago" },
               ].map((classroom, idx) => (
                 <Card key={idx}>
                   <CardHeader>
@@ -60,6 +85,9 @@ export default function Page() {
               ))}
             </div>
           </div>
+
+          {/* Recent Classrooms */}
+    
         </div>
       </div>
     </main>
