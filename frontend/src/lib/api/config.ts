@@ -1,5 +1,6 @@
 // API Configuration
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
+export const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || `${BASE_URL}/api/v1`;
 
 // Endpoints
 export const ENDPOINTS = {
@@ -9,6 +10,14 @@ export const ENDPOINTS = {
     GOOGLE_LOGIN: '/auth/google',
     REGISTER: '/auth/register',
     FORGOT_PASSWORD: '/auth/forgot-password',
+  },
+
+  CLASSROOMS: {
+    GET_ALL: "/classrooms/getClassrooms", // Make sure path starts with a slash
+    POST_ANNOUNCEMENT: "/classrooms/postAnnouncement",
+    GET_ANNOUNCEMENTS: "/classrooms/getAnnouncements",
+    CREATE: "/classrooms/create",
+
   },
 };
 

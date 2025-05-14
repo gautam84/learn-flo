@@ -72,59 +72,121 @@ export class ApiClient {
   /**
    * Generic request method
    */
+  // private async request<T>(
+  //   endpoint: string, 
+  //   method: string, 
+  //   data?: any, 
+  //   requireAuth = true
+  // ): Promise<ApiResponse<T>> {
+  //   const url = `${this.baseUrl}${endpoint}`;
+
+  //   const options: RequestInit = {
+  //     method,
+  //     headers: this.getHeaders(requireAuth),
+  //   ...(requireAuth && { credentials: 'include' }), // Add credentials only if requireAuth is true
+
+  //   };
+
+  //   if (data) {
+  //     options.body = JSON.stringify(data);
+  //   }
+
+
+  //   try {
+  //     const response = await this.fetchWithTimeout(url, options);
+  //     const responseData = await response.json();
+
+  //     if (!response.ok) {
+  //       throw new ApiError(
+  //         responseData.error || 'An unknown error occurred',
+  //         response.status
+  //       );
+  //     }
+
+  //     return {
+  //       success: true,
+  //       data: responseData.data,
+  //     };
+  //   } catch (error) {
+  //     if (error instanceof ApiError) {
+  //       return {
+  //         success: false,
+  //         error: error.message,
+  //       };
+  //     }
+
+  //     if (error instanceof Error) {
+  //       // Handle network errors, timeouts, etc.
+  //       return {
+  //         success: false,
+  //         error: error.message || 'Network error',
+  //       };
+  //     }
+
+  //     return {
+  //       success: false,
+  //       error: 'An unknown error occurred',
+  //     };
+  //   }
+  // }
+
+
   private async request<T>(
-    endpoint: string, 
-    method: string, 
-    data?: any, 
-    requireAuth = true
-  ): Promise<ApiResponse<T>> {
-    const url = `${this.baseUrl}${endpoint}`;
-    const options: RequestInit = {
-      method,
-      headers: this.getHeaders(requireAuth),
-    };
+  endpoint: string,
+  method: string,
+  data?: any,
+  requireAuth = true
+): Promise<ApiResponse<T>> {
+  const url = `${this.baseUrl}${endpoint}`;
 
-    if (data) {
-      options.body = JSON.stringify(data);
-    }
+  const isFormData = typeof FormData !== 'undefined' && data instanceof FormData;
 
-    try {
-      const response = await this.fetchWithTimeout(url, options);
-      const responseData = await response.json();
-
-      if (!response.ok) {
-        throw new ApiError(
-          responseData.error || 'An unknown error occurred',
-          response.status
-        );
-      }
-
-      return {
-        success: true,
-        data: responseData.data,
-      };
-    } catch (error) {
-      if (error instanceof ApiError) {
-        return {
-          success: false,
-          error: error.message,
-        };
-      }
-
-      if (error instanceof Error) {
-        // Handle network errors, timeouts, etc.
-        return {
-          success: false,
-          error: error.message || 'Network error',
-        };
-      }
-
-      return {
-        success: false,
-        error: 'An unknown error occurred',
-      };
+  const headers: HeadersInit = requireAuth ? {} : { 'Content-Type': 'application/json' };
+  if (!isFormData) {
+    Object.assign(headers, this.getHeaders(requireAuth));
+  } else if (requireAuth) {
+    const token = this.getToken();
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
     }
   }
+
+  const options: RequestInit = {
+    method,
+    headers,
+    ...(requireAuth && { credentials: 'include' }),
+    body: isFormData ? data : data ? JSON.stringify(data) : undefined,
+  };
+
+  try {
+    const response = await this.fetchWithTimeout(url, options);
+    const responseData = await response.json();
+
+    if (!response.ok) {
+      throw new ApiError(
+        responseData.error || responseData.message || 'An unknown error occurred',
+        response.status
+      );
+    }
+
+    return {
+      success: true,
+      data: responseData.data,
+    };
+  } catch (error) {
+    if (error instanceof ApiError) {
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}
 
   /**
    * HTTP methods
@@ -132,6 +194,8 @@ export class ApiClient {
   public async get<T>(endpoint: string, requireAuth = true): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, 'GET', undefined, requireAuth);
   }
+
+  
 
   public async post<T>(endpoint: string, data: any, requireAuth = true): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, 'POST', data, requireAuth);

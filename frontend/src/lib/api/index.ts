@@ -6,6 +6,9 @@ export { apiClient } from './client';
 // Export authentication service
 export { authService } from './auth';
 
+// Export classrooms service
+export { classroomsService } from './classrooms';
+
 // Export types
 export * from './types';
 

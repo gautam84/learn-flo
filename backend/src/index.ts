@@ -7,6 +7,7 @@ import api from './routes/api';
 
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
+import path from 'path';
 
 
 const app = express();
@@ -16,6 +17,8 @@ app.use(cors({
     origin: 'http://localhost:3001', // your Next.js frontend
     credentials: true, // if you're using cookies/auth headers
   }));
+
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 
 app.use('/api/v1', api);
