@@ -37,13 +37,13 @@ To get a local copy up and running, follow these simple steps.
 
 - Node.js (v14 or later)
 - pnpm
-- PostgreSQL
+- NeonDb
 
 ### Installation
 
 1.  **Clone the repo**
     ```sh
-    git clone https://github.com/your_username/your_project.git
+    git clone [https://github.com/your_username/your_project.git](https://github.com/gautam84/learn-flo.git)
     ```
 2.  **Set up the backend**
     - Navigate to the `backend` directory:
