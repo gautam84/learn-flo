@@ -1,5 +1,4 @@
 "use client";
-import { mockAnnouncements } from "@/lib/mockAnnouncements";
 import { Card, CardContent } from "./ui/card";
 import { useAuth } from "@/lib/contexts/auth-context";
 import { Button } from "./ui/button";
