@@ -43,6 +43,7 @@ model User {
 model Classroom {
   id        Int      @id @default(autoincrement())
   name      String
+  code      String   @unique
   createdAt DateTime @default(now())
 
   creatorId Int

@@ -11,6 +11,7 @@ export interface Classroom {
   id: string;
   name: string;
   createdAt: string;
+  code?: string; // Only returned to the teacher who created the classroom
 }
 
 export interface Announcement {

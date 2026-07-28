@@ -3,6 +3,7 @@ import { prisma } from '../../lib/prisma';
 import { AuthenticatedRequest } from '../../middleware/auth.middleware';
 import { z } from 'zod';
 import path from 'path';
+import { CODE_LENGTH, createUniqueClassCode, normalizeClassCode } from './classroom-code';
 
 
 
@@ -37,6 +38,7 @@ export const getClassrooms = async (req: AuthenticatedRequest, res: Response): P
           select: {
             id: true,
             name: true,
+            code: true,
             createdAt: true,
           },
           skip: (page - 1) * pageSize,
@@ -124,6 +126,7 @@ const createClassroomSchema = z.object({
       const classroom = await prisma.classroom.create({
         data: {
           name,
+          code: await createUniqueClassCode(),
           creatorId: userId,
         },
       });
@@ -136,67 +139,80 @@ const createClassroomSchema = z.object({
   };
 
   const enrollSchema = z.object({
-    classroomId: z.number({ required_error: 'Classroom ID is required' }),
+    code: z
+      .string({ required_error: 'Class code is required' })
+      .transform(normalizeClassCode)
+      .refine((code) => code.length === CODE_LENGTH, {
+        message: `Enter a valid ${CODE_LENGTH}-character class code.`,
+      }),
   });
-  
+
   export const enroll = async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     try {
       const result = enrollSchema.safeParse(req.body);
       if (!result.success) {
-        return res.status(400).json({ success: false, error: result.error.errors[0].message });
+        return res.status(400).json({ success: false, message: result.error.errors[0].message });
       }
-  
-      const { classroomId } = result.data;
-  
+
+      const { code } = result.data;
+
       if (!req.user || !req.user.id) {
         return res.status(401).json({ success: false, message: 'Unauthorized' });
       }
-  
+
       const userId = parseInt(req.user.id, 10);
-  
+
       const user = await prisma.user.findUnique({ where: { id: userId } });
       if (!user || user.role !== 'STUDENT') {
         return res.status(403).json({ success: false, message: 'Only students can enroll in classrooms.' });
       }
-  
-      // Check if classroom exists
-      const classroom = await prisma.classroom.findUnique({ where: { id: classroomId } });
-      if (!classroom) {
-        return res.status(404).json({ success: false, message: 'Classroom not found.' });
-      }
-  
-      // Check if already enrolled
-      const isEnrolled = await prisma.classroom.findFirst({
-        where: {
-          id: classroomId,
+
+      const classroom = await prisma.classroom.findUnique({
+        where: { code },
+        select: {
+          id: true,
+          name: true,
+          createdAt: true,
           enrolledStudents: {
-            some: { id: userId },
+            where: { id: userId },
+            select: { id: true },
           },
         },
       });
-  
-      if (isEnrolled) {
+
+      if (!classroom) {
+        return res.status(404).json({ success: false, message: 'No classroom found with that code.' });
+      }
+
+      if (classroom.enrolledStudents.length > 0) {
         return res.status(400).json({ success: false, message: 'Already enrolled in this classroom.' });
       }
-  
-      // Enroll student
+
       await prisma.classroom.update({
-        where: { id: classroomId },
+        where: { id: classroom.id },
         data: {
           enrolledStudents: {
             connect: { id: userId },
           },
         },
       });
-  
-      return res.status(200).json({ success: true, message: 'Successfully enrolled in classroom.' });
-  
+
+      return res.status(200).json({
+        success: true,
+        message: 'Successfully enrolled in classroom.',
+        data: {
+          id: classroom.id,
+          name: classroom.name,
+          createdAt: classroom.createdAt,
+        },
+      });
+
     } catch (error) {
       console.error('Enroll error:', error);
       return res.status(500).json({ success: false, message: 'Internal server error' });
     }
   };
-  
+
 
   const getStudentsSchema = z.object({
     classroomId: z.number({ required_error: 'Classroom ID is required' }),
@@ -285,6 +301,63 @@ const createClassroomSchema = z.object({
       });
     } catch (error) {
       console.error('Get students error:', error);
+      return res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+  };
+
+
+  export const getClassroom = async (req: AuthenticatedRequest, res: Response): Promise<any> => {
+    try {
+      const classroomId = parseInt(req.params.id, 10);
+
+      if (isNaN(classroomId)) {
+        return res.status(400).json({ success: false, message: 'Invalid classroom ID.' });
+      }
+
+      if (!req.user || !req.user.id) {
+        return res.status(401).json({ success: false, message: 'Unauthorized' });
+      }
+
+      const userId = parseInt(req.user.id, 10);
+
+      const classroom = await prisma.classroom.findUnique({
+        where: { id: classroomId },
+        select: {
+          id: true,
+          name: true,
+          code: true,
+          createdAt: true,
+          creatorId: true,
+          enrolledStudents: {
+            where: { id: userId },
+            select: { id: true },
+          },
+        },
+      });
+
+      if (!classroom) {
+        return res.status(404).json({ success: false, message: 'Classroom not found.' });
+      }
+
+      const isCreator = classroom.creatorId === userId;
+      const isEnrolled = classroom.enrolledStudents.length > 0;
+
+      if (!isCreator && !isEnrolled) {
+        return res.status(403).json({ success: false, message: 'You are not a member of this classroom.' });
+      }
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          id: classroom.id,
+          name: classroom.name,
+          createdAt: classroom.createdAt,
+          // The code is the teacher's to share, so only the creator gets it back.
+          ...(isCreator && { code: classroom.code }),
+        },
+      });
+    } catch (error) {
+      console.error('Get classroom error:', error);
       return res.status(500).json({ success: false, message: 'Internal server error' });
     }
   };

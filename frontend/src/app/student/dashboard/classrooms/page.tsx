@@ -5,26 +5,27 @@ import { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
  } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
-import { PlusCircle, Edit, LogOut } from "lucide-react"
+import { PlusCircle } from "lucide-react"
 import Link from "next/link";
-import { useAuth } from "@/lib/contexts/auth-context";
+import { toast } from "sonner";
 import { SiteHeader } from "@/components/site-header";
+import { JoinClassroomDialog } from "@/components/classrooms/join-classroom-dialog";
 import { classroomsService } from "@/lib/api/classrooms";
 import { Classroom } from "@/lib/common/types";
 
 export default function Page() {
+  const router = useRouter();
   const [classrooms, setClassrooms] = useState<Classroom[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [joinOpen, setJoinOpen] = useState(false);
 
   useEffect(() => {
     const fetchClassrooms = async () => {
@@ -63,6 +64,11 @@ export default function Page() {
     fetchClassrooms();
   }, [page]);
 
+  const handleJoined = (classroom: Classroom) => {
+    toast.success(`Joined ${classroom.name}`);
+    router.push(`/classroom/${classroom.id}`);
+  };
+
   return (
     <main>
       <div className="flex flex-1 flex-col">
@@ -72,8 +78,11 @@ export default function Page() {
           {/* Classrooms List */}
           <div className="p-4 md:p-6">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold">All Classrooms</h2>
-      
+              <h2 className="text-lg font-semibold">My Classrooms</h2>
+              <Button size="sm" onClick={() => setJoinOpen(true)}>
+                <PlusCircle className="size-4" />
+                Join classroom
+              </Button>
             </div>
 
             {loading ? (
@@ -81,7 +90,9 @@ export default function Page() {
             ) : error ? (
               <p className="text-red-500">{error}</p>
             ) : classrooms.length === 0 ? (
-              <p>No classrooms found. Create a new classroom to get started.</p>
+              <p className="text-muted-foreground">
+                You have not joined any classrooms yet. Ask your teacher for a class code to get started.
+              </p>
             ) : (
               <div className="grid grid-cols-1 gap-4">
                 {classrooms.map((classroom) => (
@@ -129,6 +140,12 @@ export default function Page() {
           </div>
         </div>
       </div>
+
+      <JoinClassroomDialog
+        open={joinOpen}
+        onOpenChange={setJoinOpen}
+        onJoined={handleJoined}
+      />
     </main>
   );
 }

@@ -19,6 +19,24 @@ export class ClassroomsService {
     }, true);
   }
 
+  /**
+   * Enroll the signed-in student in a classroom using its class code
+   * @param code The class code shared by the teacher
+   */
+  public async enroll(code: string): Promise<ApiResponse<Classroom>> {
+    return apiClient.post(ENDPOINTS.CLASSROOMS.ENROLL, {
+      code: code.trim().toUpperCase(),
+    }, true);
+  }
+
+  /**
+   * Get a single classroom. The `code` field comes back only for its teacher.
+   * @param classroomId ID of the classroom
+   */
+  public async getClassroom(classroomId: number): Promise<ApiResponse<Classroom>> {
+    return apiClient.get<Classroom>(`${ENDPOINTS.CLASSROOMS.GET_ONE}/${classroomId}`, true);
+  }
+
 
 
 

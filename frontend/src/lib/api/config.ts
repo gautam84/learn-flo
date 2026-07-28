@@ -17,7 +17,8 @@ export const ENDPOINTS = {
     POST_ANNOUNCEMENT: "/classrooms/postAnnouncement",
     GET_ANNOUNCEMENTS: "/classrooms/getAnnouncements",
     CREATE: "/classrooms/create",
-
+    ENROLL: "/classrooms/enroll",
+    GET_ONE: "/classrooms", // append /:id
   },
 };
 
