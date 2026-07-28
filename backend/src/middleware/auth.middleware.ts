@@ -7,15 +7,16 @@ export interface AuthenticatedRequest extends Request {
 }
 
 export const verifyToken = (req: AuthenticatedRequest, res: Response, next: NextFunction): any  => {
-  const token = req.cookies.token || req.headers.authorization?.split(' ')[1];
+  const rawToken = req.cookies?.token || req.headers.authorization?.split(' ')[1];
+  // Strip the quotes that localStorage-serialized tokens arrive wrapped in.
+  const token = rawToken?.replace(/^"|"$/g, '');
 
-  // console.log('Token:', token); // Debugging line to check the token
-  if (!token.replace(/^"|"$/g, '')) {
+  if (!token) {
     return res.status(401).json({ success: false, message: 'No token provided. Unauthorized.' });
   }
 
   try {
-    const decoded = jwt.verify(token.replace(/^"|"$/g, ''), process.env.JWT_SECRET!); // make sure JWT_SECRET is defined in env
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!); // make sure JWT_SECRET is defined in env
     req.user = decoded;
     next();
   } catch (err) {

@@ -1,7 +1,7 @@
 import express from 'express';
-import { 
+import {
     getClassrooms,
-     createClassroom, enroll, getEnrolledStudents, deleteClassroom, getAnnouncements, postAnnouncement   } from './classrooms.controller';
+     createClassroom, enroll, getClassroom, getEnrolledStudents, deleteClassroom, getAnnouncements, postAnnouncement   } from './classrooms.controller';
 import { upload } from '../../middleware/upload.middleware';
 
 const router = express.Router();
@@ -14,6 +14,9 @@ router.delete('/delete/:id', deleteClassroom);
 
 router.get('/getAnnouncements', getAnnouncements)
 router.post('/postAnnouncement', upload.single('file'), postAnnouncement);
+
+// Declared last so it does not shadow the literal GET routes above.
+router.get('/:id', getClassroom);
 
 
 

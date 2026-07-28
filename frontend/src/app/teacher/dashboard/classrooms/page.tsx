@@ -5,17 +5,13 @@ import { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
  } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { useRouter } from "next/navigation"
-import { PlusCircle, Edit, LogOut } from "lucide-react"
 import Link from "next/link";
-import { useAuth } from "@/lib/contexts/auth-context";
 import { SiteHeader } from "@/components/site-header";
+import { ClassCode } from "@/components/classrooms/class-code";
 import { classroomsService } from "@/lib/api/classrooms";
 import { Classroom } from "@/lib/common/types";
 
@@ -91,10 +87,11 @@ export default function Page() {
                     <CardHeader>
                       <CardTitle className="text-base">{classroom.name}</CardTitle>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="flex flex-wrap items-center justify-between gap-2">
                       <p className="text-sm text-muted-foreground">
                         Created on {new Date(classroom.createdAt).toLocaleDateString()}
                       </p>
+                      {classroom.code && <ClassCode code={classroom.code} />}
                     </CardContent>
                   </Card>
                   </Link>
